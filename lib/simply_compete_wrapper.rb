@@ -45,7 +45,13 @@ class SimplyCompeteWrapper
     csv = ::CSV.parse(response.body, :headers => true).reject { |row| row.all?(&:nil?) }.map(&:to_hash)
     csv = csv.each_with_object({}) do |h, obj|
       key = h["FirstName"]+" "+h["LastName"]
-      value = h["LeagueRating"]
+      if h["LeagueRating"].blank?
+         h["LeagueRating"] = '0'
+      end
+      if h["Expiration"].blank?
+         h["Expiration"] = '01/01/1990'
+      end
+      value = h["LeagueRating"] +"|"+h["Expiration"]
       obj[key] = value
     end
     csv

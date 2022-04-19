@@ -44,7 +44,16 @@ class MembersController < AuthenticatedController
 
     @club.members.each do |member|
       if hash[member.name.downcase].present?
-        member.update_column :league_rating, hash[member.name.downcase]
+        rating = hash[member.name.downcase].split("|")[0]
+        if rating.present?
+            rating = rating.to_i
+        else
+            rating = 0
+        end
+        expiration = hash[member.name.downcase].split("|")[1]
+        expiration = Date.strptime(expiration, '%m/%d/%Y')
+        member.update_column :league_rating, rating
+        member.update_column :usatt_expiration, expiration
       end 
     end
     render json: @club.members
