@@ -101,7 +101,8 @@ class ApplicationController < ActionController::API
     @client.api.account.messages.create(
       from: '+16315134121',
       to: @from,
-      body: @message
+      body: @message,
+
     )
     puts "checked in successfully"
     render :status => :ok

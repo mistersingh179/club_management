@@ -2,6 +2,15 @@ Rails.application.routes.draw do
 
   mount_devise_token_auth_for 'Owner', at: 'auth'
 
+  resource :open, controller: 'open', only: [] do
+    collection do
+      get 'clubs'
+      post 'checkin'
+      post 'remove_checkin'
+      get 'list_checkins'
+    end
+  end
+
   resources :members, :only => [] do
     collection do
       post :global_search

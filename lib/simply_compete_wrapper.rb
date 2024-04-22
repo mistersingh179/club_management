@@ -51,7 +51,10 @@ class SimplyCompeteWrapper
       if h["Expiration"].blank?
          h["Expiration"] = '01/01/1990'
       end
-      value = h["LeagueRating"] +"|"+h["Expiration"]
+      if h["MemberID"].blank?
+         h["MemberID"] = '0'
+      end
+      value = h["LeagueRating"] +"|"+h["Expiration"]+"|"+h["MemberID"]
       obj[key] = value
     end
     csv
