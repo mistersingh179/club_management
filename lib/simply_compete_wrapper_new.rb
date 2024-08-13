@@ -2,7 +2,7 @@ require 'rest-client'
 require 'nokogiri'
 require 'csv'
 
-class SimplyCompeteWrapper
+class SimplyCompeteWrapperNew
 
   LOGIN_URL = 'https://usatt.simplycompete.com/login/auth'
   XHR_AUTH_URL = 'https://usatt.simplycompete.com/login/xhrAuth'
