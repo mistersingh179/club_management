@@ -27,6 +27,7 @@ class SimplyCompeteWrapper
         'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/json'
       }
 
+  puts "before making request"
     RestClient::Request.execute(method: 'POST', url: AUTH_URL, payload: form_data, headers: headers) do |response|
       puts "got response headers"
       puts response.headers
