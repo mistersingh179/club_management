@@ -1,51 +1,33 @@
-require 'rest-client'
-require 'nokogiri'
+# client = SimplyCompeteWrapper.new 'gallian83@hotmail.com', 'bttc', 1017
+# client.setup_session
+# x = client.download_csv
 require 'csv'
 
 class SimplyCompeteWrapper
 
-  LOGIN_URL = 'https://usatt.simplycompete.com/login/auth'
-  XHR_AUTH_URL = 'https://usatt.simplycompete.com/login/xhrAuth'
+  AUTH_URL = 'https://usatt.simplycompete.com/j_spring_security_check'
   RATINGS_URL_PREFIX = 'https://usatt.simplycompete.com/l/downloadRatings'
 
   def initialize(username, password, league_id)
-    @username = username
-    @password = password
-    @league_id = league_id
+    @username=username
+    @password=password
+    @league_id=league_id
     @session_id = nil
-    @csrf_token = nil
   end
 
   def setup_session
-    # Fetch the login page to retrieve the CSRF token
-    response = RestClient.get(LOGIN_URL)
-    @session_id = response.cookies["JSESSIONID"]
-    puts "got @session_id: #{@session_id}"
-
-    html_doc = Nokogiri::HTML(response.body)
-    # Extract CSRF token from the script tag
-    script_tag_content = html_doc.xpath('//script[contains(text(), "window.csrf")]').text
-    csrf_match = script_tag_content.match(/window\.csrf\s*=\s*'([^']+)'/)
-
-    if csrf_match
-      @csrf_token = csrf_match[1]
-      puts "CSRF token retrieved: #{@csrf_token}"
-    else
-      raise "CSRF token not found"
-    end
-    # Perform the login with the CSRF token
     form_data = {
-      username: @username,
-      password: @password,
-      c: @csrf_token,
-    }
-    headers = {
-      cookies: {
-        JSESSIONID: @session_id
-      }
+      j_username: @username,
+      j_password: @password,
     }
 
-    login_response = RestClient::Request.execute(method: 'POST', url: XHR_AUTH_URL, payload: form_data, headers: headers) do |response|
+    headers = {
+        'Referer' => 'http://localhost:3000/#/clubs/1/members',
+        'Content-Type' => 'application/x-www-form-urlencoded',
+        'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/json'
+      }
+
+    RestClient::Request.execute(method: 'POST', url: AUTH_URL, payload: form_data, headers: headers) do |response|
       puts "got response headers"
       puts response.headers
       puts response.body
@@ -59,7 +41,6 @@ class SimplyCompeteWrapper
       end
     end
     puts "request"
-    puts login_response
   end
 
   def download_csv
@@ -73,11 +54,17 @@ class SimplyCompeteWrapper
     puts response
     csv = ::CSV.parse(response.body, :headers => true).reject { |row| row.all?(&:nil?) }.map(&:to_hash)
     csv = csv.each_with_object({}) do |h, obj|
-      key = h["FirstName"] + " " + h["LastName"]
-      h["LeagueRating"] ||= '0'
-      h["Expiration"] ||= '01/01/1990'
-      h["MemberID"] ||= '0'
-      value = h["LeagueRating"] + "|" + h["Expiration"] + "|" + h["MemberID"]
+      key = h["FirstName"]+" "+h["LastName"]
+      if h["LeagueRating"].blank?
+         h["LeagueRating"] = '0'
+      end
+      if h["Expiration"].blank?
+         h["Expiration"] = '01/01/1990'
+      end
+      if h["MemberID"].blank?
+         h["MemberID"] = '0'
+      end
+      value = h["LeagueRating"] +"|"+h["Expiration"]+"|"+h["MemberID"]
       obj[key] = value
     end
     csv
