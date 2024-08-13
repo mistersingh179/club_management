@@ -22,12 +22,14 @@ class SimplyCompeteWrapper
       j_password: @password,
     }
     RestClient::Request.execute(method: 'POST', url: AUTH_URL, payload: form_data) do |response|
+      puts "got response headers"
       puts response.headers
       if response.headers[:location] =~ /authfail/
         puts "login failure"
       else
         puts "login successful"
         @session_id = response.cookies["JSESSIONID"]
+        puts "got session id"
         puts @session_id
       end
     end
