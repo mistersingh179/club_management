@@ -30,6 +30,7 @@ Rails.application.routes.draw do
         post :lookup
         post :mark_all_part_time
         post :update_ratings
+        post :parse_ratings_csv_file
       end
       resources :checkins
     end

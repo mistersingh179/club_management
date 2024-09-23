@@ -1,3 +1,8 @@
+local dev
+- `rvm use 3.0.6`
+- `rvm gemset use default`
+- `rails s -p 3005`
+
 show member is checked in on members table
 
 change message on download ratings to tell person to tell person that this takes a while

@@ -1,3 +1,5 @@
+require 'csv'
+
 class MembersController < AuthenticatedController
 
   before_action :set_club, except: [:global_search]
@@ -31,6 +33,55 @@ class MembersController < AuthenticatedController
       }
     end
   end
+
+  def parse_ratings_csv_file
+    # Ensure file is uploaded
+    if params[:file].present?
+      file = params[:file]
+
+      # Parse the uploaded CSV file
+      csv = ::CSV.parse(file.read, headers: true).reject { |row| row.all?(&:nil?) }.map(&:to_hash)
+
+      # Transform the CSV into the hash format required for updating the members
+      csv = csv.each_with_object({}) do |h, obj|
+        key = h["FirstName"] + " " + h["LastName"]
+
+        # Ensure default values are present if fields are blank
+        h["LeagueRating"] = '0' if h["LeagueRating"].blank?
+        h["Expiration"] = '01/01/1990' if h["Expiration"].blank?
+        h["MemberID"] = '0' if h["MemberID"].blank?
+
+        # Prepare the value in the format "LeagueRating|Expiration|MemberID"
+        value = h["LeagueRating"] + "|" + h["Expiration"] + "|" + h["MemberID"]
+        obj[key.downcase] = value
+      end
+
+      # Existing logic to update member information from the hash
+      @club.members.each do |member|
+        if csv[member.name.downcase].present?
+          # Split the string to extract rating, expiration, and member ID
+          rating, expiration, usatt_number = csv[member.name.downcase].split("|")
+
+          # Convert values where necessary
+          rating = rating.to_i
+          expiration = Date.strptime(expiration, '%m/%d/%Y')
+          usatt_number = usatt_number.to_i
+
+          # Update member record
+          member.update_column :league_rating, rating
+          member.update_column :usatt_expiration, expiration
+          member.update_column :usatt_number, usatt_number
+        end
+      end
+
+      # Return updated members as JSON response
+      render json: @club.members
+    else
+      # Handle missing file
+      render json: { error: "No file uploaded" }, status: :unprocessable_entity
+    end
+  end
+
 
   def update_ratings
     # client = SimplyCompeteWrapper.new 'gallian83@hotmail.com', 'bttc', 1017
